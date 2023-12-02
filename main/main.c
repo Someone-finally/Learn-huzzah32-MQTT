@@ -9,6 +9,8 @@
 static char* TAG= "MQTT info";
 static void mqtt_event_handler (void* event_handler_arg, esp_event_base_t event_base,int32_t event_id, void* event_data);
 static esp_mqtt_client_handle_t client ;
+int mqtt_send_data(char * topic, char * payload);
+static void send_sensor_data (void *params);
 
 void app_main(void)
 {
@@ -45,6 +47,8 @@ static void mqtt_event_handler (void* event_handler_arg, esp_event_base_t event_
  {
    case MQTT_EVENT_CONNECTED:
        ESP_LOGI(TAG,"MQTT_EVENT_CONNECTED");
+     //  esp_mqtt_client_subscribe(client,"Temperature/#",1);
+     //  esp_mqtt_client_subscribe(client,"Humidity/+/Percepetation",0);
    break;
    case MQTT_EVENT_DISCONNECTED:
        ESP_LOGI(TAG,"MQTT_EVENT_DISCONNECTED");
@@ -60,6 +64,8 @@ static void mqtt_event_handler (void* event_handler_arg, esp_event_base_t event_
    break;
    case MQTT_EVENT_DATA   :
        ESP_LOGI(TAG,"MQTT_EVENT_DATA   ");
+     //  printf("Event : %.*s \n",event_received->topic_len,event_received->topic);
+     //  printf("Data : %.*s \n",event_received->data_len,event_received->data);
    break;
    case MQTT_EVENT_BEFORE_CONNECT:
        ESP_LOGI(TAG,"MQTT_EVENT_BEFORE_CONNECT");
@@ -73,4 +79,22 @@ static void mqtt_event_handler (void* event_handler_arg, esp_event_base_t event_
    default:
    break;
  }
+
+ int mqtt_send_data(char * topic, char * payload)
+{
+  return esp_mqtt_client_publish(client,topic,payload,strlen(payload),1,0);
+}
+
+static void send_sensor_data (void *params)
+{
+ int sensor_value = 0;
+ char message[25];
+while(true)
+{
+    sprintf(message, "Sensor : %d", sensor_value);
+    mqtt_send_data("sensor pot_value", message);
+}
+
+ vTaskDelay(pdMS_TO_TICKS(10000));
+}
 }
